@@ -69,7 +69,7 @@ int ChessAI::evaluateMove(Chess* game, Piece* board[8][8], std::string move, boo
         for (int j = 0; j < 8; ++j)
             tempBoard[i][j] = nullptr;
 
-    game->createBoardFromString(game->m_boardString, tempBoard); // השתמש ב-game כדי לגשת
+    game->createBoardFromString(game->m_boardString, tempBoard);
 
     std::pair<int, int> src = convertInputToCoordinates(move.substr(0, 2));
     std::pair<int, int> dest = convertInputToCoordinates(move.substr(2, 2));
@@ -77,9 +77,9 @@ int ChessAI::evaluateMove(Chess* game, Piece* board[8][8], std::string move, boo
     tempBoard[src.first][src.second] = nullptr;
 
     int bestOpponentMoveScore = INT_MIN;
-    std::vector<std::string> opponentMoves = getAllPossibleMoves(game, tempBoard, !isPlayerTurn); // השתמש ב-game
+    std::vector<std::string> opponentMoves = getAllPossibleMoves(game, tempBoard, !isPlayerTurn);
     for (const std::string& opponentMove : opponentMoves) {
-        int score = evaluateMove(game, tempBoard, opponentMove, !isPlayerTurn, depth - 1); // השתמש ב-game
+        int score = evaluateMove(game, tempBoard, opponentMove, !isPlayerTurn, depth - 1);
         bestOpponentMoveScore = std::max(bestOpponentMoveScore, score);
     }
 
@@ -102,12 +102,12 @@ std::string ChessAI::getBestMove(Chess* game, int depth) {
         for (int j = 0; j < 8; ++j)
             tempBoard[i][j] = nullptr;
 
-    game->createBoardFromString(game->m_boardString, tempBoard); // השתמש ב-game
+    game->createBoardFromString(game->m_boardString, tempBoard);
 
-    possibleMoves = getAllPossibleMoves(game, tempBoard, game->m_turn); // השתמש ב-game
+    possibleMoves = getAllPossibleMoves(game, tempBoard, game->m_turn);
 
     for (const std::string& move : possibleMoves) {
-        int score = evaluateMove(game, tempBoard, move, game->m_turn, depth); // השתמש ב-game
+        int score = evaluateMove(game, tempBoard, move, game->m_turn, depth);
         bestMoves.push({move, score});
         if (bestMoves.size() > 5) {
             bestMoves.pull();
@@ -121,3 +121,31 @@ std::string ChessAI::getBestMove(Chess* game, int depth) {
     return bestMoves.pull().move;
 }
 
+std::string ChessAI::getBestMoveForPiece(Chess* game, const std::string& piecePos, int depth) {
+    Piece* board[8][8] = {nullptr};
+    game->createBoardFromString(game->m_boardString, board);
+
+    std::pair<int, int> src = convertInputToCoordinates(piecePos);
+    Piece* piece = board[src.first][src.second];
+    if (!piece) return "";
+
+    PriorityQueue<MoveScore, MoveComparator> bestMoves;
+
+    for (int destRow = 0; destRow < 8; ++destRow) {
+        for (int destCol = 0; destCol < 8; ++destCol) {
+            if (piece->isMoveLegal(src.first, src.second, destRow, destCol, board)) {
+                std::string move = piecePos + convertCoordinatesToInput(destRow, destCol);
+                int score = evaluateMove(game, board, move, game->m_turn, depth);
+                bestMoves.push({move, score});
+                if (bestMoves.size() > 5)
+                    bestMoves.pull();
+            }
+        }
+    }
+
+    for (int i = 0; i < 8; ++i)
+        for (int j = 0; j < 8; ++j)
+            delete board[i][j];
+
+    return bestMoves.empty() ? "" : bestMoves.pull().move;
+}
