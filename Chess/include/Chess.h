@@ -5,6 +5,16 @@
 #endif
 
 #include <string>
+#include "Rook.h"
+#include "Bishop.h"
+#include "Queen.h"
+#include "King.h"
+#include "Knight.h"
+#include "Pawn.h"
+
+#include "PriorityQueue.h"
+#include "Piece.h"
+#include "ChessAI.h"
 
 using std::cout;
 using std::cin; 
@@ -14,6 +24,8 @@ using std::string;
 const int _SIZE = 21;
 
 class Chess {
+	friend class ChessAI;
+
 	unsigned char m_board[_SIZE][_SIZE] = { 0 };
 	bool m_turn = true;
 	string m_boardString;
@@ -21,6 +33,9 @@ class Chess {
 	string m_msg = "\n";
 	string m_errorMsg = "\n";
 	int m_codeResponse;
+
+	int depth = 0;
+	ChessAI m_ai;
 
 	void clear() const;
 	void setFrames();
@@ -40,4 +55,15 @@ public:
 	Chess& operator=(const Chess&) = delete;
 	string getInput();
 	void setCodeResponse(int codeResponse);
+
+	void createBoardFromString(const std::string& boardStr, Piece* board[8][8]);
+	void calculateResponseCode();
+	const string& getBoardString() const { return m_boardString; }
+	bool getTurn() const { return m_turn; }
+
+	void setDepth(int depth) { this->depth = depth; }
+	std::string getBestMove(int depth);
+	void printBestMoves(int count);
+
 };
+
